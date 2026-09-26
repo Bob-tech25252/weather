@@ -338,6 +338,15 @@ button.stop-button {
     border-color: #ff4444;
 }
 
+button.clear-button {
+    background: #4a4a4a;
+    border-color: #888;
+}
+
+button.clear-button:hover {
+    background: #666;
+}
+
 /* =========================================================
    STATUS
 ========================================================= */
@@ -535,42 +544,43 @@ button.stop-button {
         <button
             class="test-button"
             onclick="runTestWarning()">
-
             🚨 TEST RED WARNING
-
         </button>
 
 
         <button
             onclick="testAudio()">
-
             🔊 Test Audio
-
         </button>
 
 
         <button
             onclick="enableSpeech()">
+            🗣 Enable Auto-Speech
+        </button>
 
-            🗣 Enable Speech
-
+        <button
+            onclick="readScreenText()">
+            📢 Read Screen Text
         </button>
 
 
         <button
             class="stop-button"
             onclick="stopAlert()">
+            ✖ Stop Audio
+        </button>
 
-            ✖ Stop Alert
-
+        <button 
+            class="clear-button" 
+            onclick="clearCurrentAlert()">
+            🗑 Clear Warning
         </button>
 
 
         <button
             onclick="toggleFullscreen()">
-
             ⛶ Fullscreen
-
         </button>
 
     </div>
@@ -608,28 +618,19 @@ const CONFIG = {
 
     /*
         Base44 API.
-
-        Change this if Base44 gives you a different URL.
     */
-
     API_URL:
         "https://noah-storm-scan.base44.app/api/red-alerts",
 
-
     /*
-        If Base44 requires an API key, put it here.
-
-        Leave empty if no key is required.
+        API Key (Leave empty if none required)
     */
-
     API_KEY:
         "",
-
 
     /*
         Receiver checks Base44 every 5 seconds.
     */
-
     CHECK_INTERVAL:
         5000
 
@@ -640,13 +641,6 @@ const CONFIG = {
    STATE
 ========================================================= */
 
-/*
-    IDs already processed.
-
-    This prevents the same alert from playing
-    over and over again.
-*/
-
 let knownAlertIDs =
     JSON.parse(
         localStorage.getItem(
@@ -654,32 +648,23 @@ let knownAlertIDs =
         ) || "[]"
     );
 
-
-/*
-    Speech starts disabled because browsers
-    normally require user interaction.
+/* 
+    Track alerts that the user has manually cleared, 
+    so they don't show up again.
 */
+let clearedAlertIDs = 
+    JSON.parse(
+        localStorage.getItem(
+            "noahStormClearedAlertIDs"
+        ) || "[]"
+    );
+
 
 let speechEnabled = false;
 
-
-/*
-    Current alert.
-*/
-
 let currentAlert = null;
 
-
-/*
-    Test warning active?
-*/
-
 let testWarningActive = false;
-
-
-/*
-    Test ID counter.
-*/
 
 let testCounter =
     Number(
@@ -693,75 +678,20 @@ let testCounter =
    ELEMENTS
 ========================================================= */
 
-const waiting =
-    document.getElementById(
-        "waiting"
-    );
-
-const alertBox =
-    document.getElementById(
-        "alert"
-    );
-
-const warningType =
-    document.getElementById(
-        "warningType"
-    );
-
-const locationBox =
-    document.getElementById(
-        "location"
-    );
-
-const headline =
-    document.getElementById(
-        "headline"
-    );
-
-const message =
-    document.getElementById(
-        "message"
-    );
-
-const alertID =
-    document.getElementById(
-        "alertID"
-    );
-
-const issued =
-    document.getElementById(
-        "issued"
-    );
-
-const expires =
-    document.getElementById(
-        "expires"
-    );
-
-const status =
-    document.getElementById(
-        "status"
-    );
-
-const statusBar =
-    document.getElementById(
-        "statusBar"
-    );
-
-const connectionDot =
-    document.getElementById(
-        "connectionDot"
-    );
-
-const connectionText =
-    document.getElementById(
-        "connectionText"
-    );
-
-const audio =
-    document.getElementById(
-        "alertAudio"
-    );
+const waiting = document.getElementById("waiting");
+const alertBox = document.getElementById("alert");
+const warningType = document.getElementById("warningType");
+const locationBox = document.getElementById("location");
+const headline = document.getElementById("headline");
+const message = document.getElementById("message");
+const alertID = document.getElementById("alertID");
+const issued = document.getElementById("issued");
+const expires = document.getElementById("expires");
+const status = document.getElementById("status");
+const statusBar = document.getElementById("statusBar");
+const connectionDot = document.getElementById("connectionDot");
+const connectionText = document.getElementById("connectionText");
+const audio = document.getElementById("alertAudio");
 
 
 /* =========================================================
@@ -769,24 +699,14 @@ const audio =
 ========================================================= */
 
 function setConnected() {
-
-    connectionDot.className =
-        "connection-dot online";
-
-    connectionText.textContent =
-        "Connected";
-
+    connectionDot.className = "connection-dot online";
+    connectionText.textContent = "Connected";
 }
 
 
 function setOffline() {
-
-    connectionDot.className =
-        "connection-dot offline";
-
-    connectionText.textContent =
-        "Offline";
-
+    connectionDot.className = "connection-dot offline";
+    connectionText.textContent = "Offline";
 }
 
 
@@ -796,102 +716,43 @@ function setOffline() {
 
 async function checkForAlerts() {
 
-    /*
-        Do not let Base44 overwrite a local
-        test warning while the test is running.
-    */
-
     if (testWarningActive) {
-
         return;
-
     }
 
-
     try {
-
         const headers = {
-
-            "Accept":
-                "application/json"
-
+            "Accept": "application/json"
         };
 
-
-        /*
-            Add API authentication if configured.
-        */
-
         if (CONFIG.API_KEY) {
-
-            headers["Authorization"] =
-                "Bearer " +
-                CONFIG.API_KEY;
-
+            headers["Authorization"] = "Bearer " + CONFIG.API_KEY;
         }
 
-
-        const response =
-            await fetch(
-                CONFIG.API_URL,
-                {
-                    method: "GET",
-                    headers: headers,
-                    cache: "no-store"
-                }
-            );
-
+        const response = await fetch(CONFIG.API_URL, {
+            method: "GET",
+            headers: headers,
+            cache: "no-store"
+        });
 
         if (!response.ok) {
-
-            throw new Error(
-                "HTTP " +
-                response.status
-            );
-
+            throw new Error("HTTP " + response.status);
         }
 
-
-        const data =
-            await response.json();
-
-
+        const data = await response.json();
         setConnected();
 
-
-        status.textContent =
-            "Last checked: " +
-            new Date()
-                .toLocaleTimeString();
-
-
-        statusBar.textContent =
-            "Connected to Noah Storm Scan";
-
+        status.textContent = "Last checked: " + new Date().toLocaleTimeString();
+        statusBar.textContent = "Connected to Noah Storm Scan";
 
         processAlerts(data);
 
-
     } catch (error) {
-
-        console.error(
-            "Receiver error:",
-            error
-        );
-
-
+        console.error("Receiver error:", error);
         setOffline();
-
-
-        status.textContent =
-            "Unable to connect to Noah Storm Scan";
-
-
-        statusBar.textContent =
-            "Base44 connection unavailable";
-
+        status.textContent = "Unable to connect to Noah Storm Scan";
+        statusBar.textContent = "Base44 connection unavailable";
     }
-
 }
 
 
@@ -900,194 +761,59 @@ async function checkForAlerts() {
 ========================================================= */
 
 function processAlerts(data) {
-
     let alerts = [];
 
-
-    /*
-        Accept:
-
-        {
-            "alerts": []
-        }
-
-        or directly:
-
-        []
-    */
-
     if (Array.isArray(data)) {
-
         alerts = data;
-
     }
-
-    else if (
-        Array.isArray(
-            data.alerts
-        )
-    ) {
-
+    else if (Array.isArray(data.alerts)) {
         alerts = data.alerts;
-
     }
 
-
-    /*
-        Only active RED alerts.
-    */
-
-    alerts =
-        alerts.filter(
-            alert =>
-
-                String(
-                    alert.alert_level || ""
-                ).toUpperCase()
-                === "RED"
-
-                &&
-
-                String(
-                    alert.status || ""
-                ).toLowerCase()
-                === "active"
-
-        );
-
-
-    /*
-        No active warnings.
-    */
-
-    if (
-        alerts.length === 0
-    ) {
-
-        if (!testWarningActive) {
-
-            hideAlert();
-
-        }
-
-        return;
-
-    }
-
-
-    /*
-        Newest warning first.
-    */
-
-    alerts.sort(
-        (a, b) =>
-
-            new Date(
-                b.issued_at || 0
-            )
-
-            -
-
-            new Date(
-                a.issued_at || 0
-            )
+    alerts = alerts.filter(alert =>
+        String(alert.alert_level || "").toUpperCase() === "RED" &&
+        String(alert.status || "").toLowerCase() === "active"
     );
 
+    if (alerts.length === 0) {
+        if (!testWarningActive) hideAlert();
+        return;
+    }
 
-    const alert =
-        alerts[0];
+    alerts.sort((a, b) => new Date(b.issued_at || 0) - new Date(a.issued_at || 0));
 
-
-    /*
-        Every alert MUST have an ID.
-    */
+    const alert = alerts[0];
 
     if (!alert.alert_id) {
-
-        console.warn(
-            "RED alert has no alert_id."
-        );
-
+        console.warn("RED alert has no alert_id.");
         return;
-
     }
 
+    /* Skip if this alert was explicitly cleared by the user */
+    if (clearedAlertIDs.includes(alert.alert_id)) {
+        if (!testWarningActive && currentAlert?.alert_id === alert.alert_id) {
+            hideAlert();
+        }
+        return;
+    }
 
-    /*
-        Has this ID already been processed?
-    */
+    if (!knownAlertIDs.includes(alert.alert_id)) {
+        // NEW ALERT
+        knownAlertIDs.push(alert.alert_id);
 
-    if (
-        !knownAlertIDs.includes(
-            alert.alert_id
-        )
-    ) {
-
-        /*
-            NEW ALERT
-        */
-
-        knownAlertIDs.push(
-            alert.alert_id
-        );
-
-
-        /*
-            Keep only the most recent
-            100 IDs.
-        */
-
-        if (
-            knownAlertIDs.length > 100
-        ) {
-
-            knownAlertIDs =
-                knownAlertIDs.slice(
-                    -100
-                );
-
+        if (knownAlertIDs.length > 100) {
+            knownAlertIDs = knownAlertIDs.slice(-100);
         }
 
+        localStorage.setItem("noahStormKnownAlertIDs", JSON.stringify(knownAlertIDs));
 
-        localStorage.setItem(
-            "noahStormKnownAlertIDs",
-            JSON.stringify(
-                knownAlertIDs
-            )
-        );
-
-
-        showAlert(
-            alert,
-            false
-        );
-
-
+        showAlert(alert, false);
         playAudio();
-
-
-        speakAlert(
-            alert
-        );
-
+        speakAlert(alert);
+    } else {
+        // Existing un-cleared alert
+        showAlert(alert, false);
     }
-
-    else {
-
-        /*
-            Existing alert.
-
-            Update the display but
-            DO NOT play the sound again.
-        */
-
-        showAlert(
-            alert,
-            false
-        );
-
-    }
-
 }
 
 
@@ -1095,116 +821,32 @@ function processAlerts(data) {
    SHOW ALERT
 ========================================================= */
 
-function showAlert(
-    alert,
-    isTest
-) {
-
-    currentAlert =
-        alert;
-
-
-    waiting.style.display =
-        "none";
-
-
-    alertBox.classList.add(
-        "show"
-    );
-
-
-    /*
-        Test styling.
-    */
+function showAlert(alert, isTest) {
+    currentAlert = alert;
+    waiting.style.display = "none";
+    alertBox.classList.add("show");
 
     if (isTest) {
-
-        alertBox.classList.add(
-            "test"
-        );
-
+        alertBox.classList.add("test");
+    } else {
+        alertBox.classList.remove("test");
     }
 
-    else {
+    warningType.textContent = alert.warning_type || "RED WARNING";
 
-        alertBox.classList.remove(
-            "test"
-        );
-
+    if (Array.isArray(alert.affected_locations)) {
+        locationBox.textContent = alert.affected_locations.join(" • ");
+    } else {
+        locationBox.textContent = alert.location || "UNKNOWN LOCATION";
     }
 
+    headline.textContent = alert.headline || "RED WARNING";
+    message.textContent = alert.message || "";
+    alertID.textContent = "ALERT ID: " + (alert.alert_id || "UNKNOWN");
+    issued.textContent = formatDate(alert.issued_at);
+    expires.textContent = formatDate(alert.expires_at);
 
-    warningType.textContent =
-        alert.warning_type ||
-        "RED WARNING";
-
-
-    /*
-        Support either:
-
-        location
-
-        OR
-
-        affected_locations
-    */
-
-    if (
-        Array.isArray(
-            alert.affected_locations
-        )
-    ) {
-
-        locationBox.textContent =
-            alert.affected_locations
-                .join(" • ");
-
-    }
-
-    else {
-
-        locationBox.textContent =
-            alert.location ||
-            "UNKNOWN LOCATION";
-
-    }
-
-
-    headline.textContent =
-        alert.headline ||
-        "RED WARNING";
-
-
-    message.textContent =
-        alert.message ||
-        "";
-
-
-    alertID.textContent =
-        "ALERT ID: " +
-        (
-            alert.alert_id ||
-            "UNKNOWN"
-        );
-
-
-    issued.textContent =
-        formatDate(
-            alert.issued_at
-        );
-
-
-    expires.textContent =
-        formatDate(
-            alert.expires_at
-        );
-
-
-    statusBar.textContent =
-        isTest
-            ? "TEST MODE — NOT A REAL WARNING"
-            : "RED WARNING ACTIVE";
-
+    statusBar.textContent = isTest ? "TEST MODE — NOT A REAL WARNING" : "RED WARNING ACTIVE";
 }
 
 
@@ -1213,34 +855,13 @@ function showAlert(
 ========================================================= */
 
 function hideAlert() {
+    if (testWarningActive) return;
 
-    if (testWarningActive) {
-
-        return;
-
-    }
-
-
-    alertBox.classList.remove(
-        "show"
-    );
-
-    alertBox.classList.remove(
-        "test"
-    );
-
-
-    waiting.style.display =
-        "block";
-
-
-    currentAlert =
-        null;
-
-
-    statusBar.textContent =
-        "Monitoring Noah Storm Scan";
-
+    alertBox.classList.remove("show");
+    alertBox.classList.remove("test");
+    waiting.style.display = "block";
+    currentAlert = null;
+    statusBar.textContent = "Monitoring Noah Storm Scan";
 }
 
 
@@ -1249,179 +870,84 @@ function hideAlert() {
 ========================================================= */
 
 function playAudio() {
-
     audio.currentTime = 0;
-
-
-    const promise =
-        audio.play();
-
+    const promise = audio.play();
 
     if (promise) {
-
-        promise.catch(
-            error => {
-
-                console.warn(
-                    "Audio autoplay blocked.",
-                    error
-                );
-
-            }
-        );
-
+        promise.catch(error => {
+            console.warn("Audio autoplay blocked.", error);
+        });
     }
-
 }
 
-
 function testAudio() {
-
     audio.currentTime = 0;
-
-
-    audio.play()
-        .catch(() => {
-
-            alert(
-                "The browser blocked the audio.\n\n" +
-                "Click the page once and try again."
-            );
-
-        });
-
+    audio.play().catch(() => {
+        alert("The browser blocked the audio.\n\nClick the page once and try again.");
+    });
 }
 
 
 /* =========================================================
-   SPEECH
+   SPEECH & READ SCREEN
 ========================================================= */
 
 function enableSpeech() {
-
-    if (
-        !("speechSynthesis" in window)
-    ) {
-
-        alert(
-            "Speech synthesis is not supported by this browser."
-        );
-
+    if (!("speechSynthesis" in window)) {
+        alert("Speech synthesis is not supported by this browser.");
         return;
-
     }
-
 
     speechEnabled = true;
-
-
-    const testSpeech =
-        new SpeechSynthesisUtterance(
-            "Noah Storm Scan speech enabled."
-        );
-
-
-    testSpeech.rate =
-        0.9;
-
-
-    speechSynthesis.speak(
-        testSpeech
-    );
-
-
-    statusBar.textContent =
-        "Speech enabled";
-
+    const testSpeech = new SpeechSynthesisUtterance("Noah Storm Scan automatic speech enabled.");
+    testSpeech.rate = 0.9;
+    speechSynthesis.speak(testSpeech);
+    statusBar.textContent = "Automatic speech enabled";
 }
 
-
 function speakAlert(alert) {
-
-    if (!speechEnabled) {
-
-        return;
-
-    }
-
-
-    if (
-        !("speechSynthesis" in window)
-    ) {
-
-        return;
-
-    }
-
-
+    if (!speechEnabled || !("speechSynthesis" in window)) return;
+    
     speechSynthesis.cancel();
+    
+    let locations = Array.isArray(alert.affected_locations) 
+        ? alert.affected_locations.join(", ") 
+        : (alert.location || "unknown location");
 
+    const speechText = "Red warning. " + (alert.warning_type || "warning") + 
+                       ". Affected location: " + locations + ". " + (alert.message || "");
 
-    let locations = "";
+    const speech = new SpeechSynthesisUtterance(speechText);
+    speech.rate = 0.9;
+    speech.pitch = 1;
+    speech.volume = 1;
 
+    speechSynthesis.speak(speech);
+}
 
-    if (
-        Array.isArray(
-            alert.affected_locations
-        )
-    ) {
-
-        locations =
-            alert.affected_locations
-                .join(", ");
-
+// Function to manually read what is currently displayed on the screen
+function readScreenText() {
+    if (!("speechSynthesis" in window)) {
+        alert("Speech synthesis is not supported by this browser.");
+        return;
     }
+    
+    speechSynthesis.cancel(); // Stop anything currently playing
 
-    else {
-
-        locations =
-            alert.location ||
-            "unknown location";
-
+    if (alertBox.classList.contains("show")) {
+        const textToRead = 
+            warningType.textContent + ". " +
+            locationBox.textContent + ". " +
+            headline.textContent + ". " +
+            message.textContent;
+            
+        const speech = new SpeechSynthesisUtterance(textToRead);
+        speech.rate = 0.9;
+        speechSynthesis.speak(speech);
+    } else {
+        const speech = new SpeechSynthesisUtterance("Receiver ready. Monitoring for warnings. Waiting for connection.");
+        speechSynthesis.speak(speech);
     }
-
-
-    const speechText =
-
-        "Red warning. " +
-
-        (
-            alert.warning_type ||
-            "warning"
-        ) +
-
-        ". Affected location: " +
-
-        locations +
-
-        ". " +
-
-        (
-            alert.message ||
-            ""
-        );
-
-
-    const speech =
-        new SpeechSynthesisUtterance(
-            speechText
-        );
-
-
-    speech.rate =
-        0.9;
-
-    speech.pitch =
-        1;
-
-    speech.volume =
-        1;
-
-
-    speechSynthesis.speak(
-        speech
-    );
-
 }
 
 
@@ -1430,162 +956,41 @@ function speakAlert(alert) {
 ========================================================= */
 
 function runTestWarning() {
-
-    /*
-        Stop any previous test.
-    */
-
     stopTestWarning();
-
-
-    /*
-        Increase test ID.
-    */
-
     testCounter++;
+    localStorage.setItem("noahStormTestCounter", testCounter);
 
-
-    localStorage.setItem(
-        "noahStormTestCounter",
-        testCounter
-    );
-
-
-    const testID =
-        "NSS-TEST-" +
-        String(
-            testCounter
-        ).padStart(
-            4,
-            "0"
-        );
-
-
-    const now =
-        new Date();
-
-
-    /*
-        Test expires in 10 minutes.
-    */
-
-    const expiry =
-        new Date(
-            now.getTime()
-            +
-            10 * 60 * 1000
-        );
-
+    const testID = "NSS-TEST-" + String(testCounter).padStart(4, "0");
+    const now = new Date();
+    const expiry = new Date(now.getTime() + 10 * 60 * 1000);
 
     const testAlert = {
-
-        alert_id:
-            testID,
-
-        source_warning_id:
-            "TEST-SOURCE-" +
-            testCounter,
-
-        alert_level:
-            "RED",
-
-        status:
-            "active",
-
-        warning_type:
-            "TORNADO WARNING",
-
-        affected_locations: [
-
-            "Steinbach, Manitoba"
-
-        ],
-
-        location:
-            "Steinbach, Manitoba",
-
-        headline:
-            "TEST RED TORNADO WARNING",
-
-        message:
-            "THIS IS A TEST ALERT FROM NOAH STORM SCAN. " +
-            "THIS IS NOT A REAL WEATHER WARNING.",
-
-        issued_at:
-            now.toISOString(),
-
-        expires_at:
-            expiry.toISOString(),
-
-        source:
-            "Noah Storm Scan TEST",
-
-        test:
-            true
-
+        alert_id: testID,
+        source_warning_id: "TEST-SOURCE-" + testCounter,
+        alert_level: "RED",
+        status: "active",
+        warning_type: "TORNADO WARNING",
+        affected_locations: ["Steinbach, Manitoba"],
+        location: "Steinbach, Manitoba",
+        headline: "TEST RED TORNADO WARNING",
+        message: "THIS IS A TEST ALERT FROM NOAH STORM SCAN. THIS IS NOT A REAL WEATHER WARNING.",
+        issued_at: now.toISOString(),
+        expires_at: expiry.toISOString(),
+        source: "Noah Storm Scan TEST",
+        test: true
     };
 
+    testWarningActive = true;
+    connectionDot.className = "connection-dot testing";
+    connectionText.textContent = "TEST MODE";
 
-    /*
-        Mark test mode.
-    */
-
-    testWarningActive =
-        true;
-
-
-    /*
-        Change connection indicator.
-    */
-
-    connectionDot.className =
-        "connection-dot testing";
-
-    connectionText.textContent =
-        "TEST MODE";
-
-
-    /*
-        Display.
-    */
-
-    showAlert(
-        testAlert,
-        true
-    );
-
-
-    /*
-        Play your uploaded MP3.
-    */
-
+    showAlert(testAlert, true);
     playAudio();
+    speakAlert(testAlert);
 
-
-    /*
-        Speak the test alert if enabled.
-    */
-
-    speakAlert(
-        testAlert
-    );
-
-
-    /*
-        Automatically stop the test
-        when its 10-minute test period ends.
-    */
-
-    window.testTimeout =
-        setTimeout(
-            () => {
-
-                stopTestWarning();
-
-            },
-            10 * 60 * 1000
-        );
-
+    window.testTimeout = setTimeout(() => {
+        stopTestWarning();
+    }, 10 * 60 * 1000);
 }
 
 
@@ -1594,92 +999,26 @@ function runTestWarning() {
 ========================================================= */
 
 function stopTestWarning() {
-
-    if (
-        window.testTimeout
-    ) {
-
-        clearTimeout(
-            window.testTimeout
-        );
-
-        window.testTimeout =
-            null;
-
+    if (window.testTimeout) {
+        clearTimeout(window.testTimeout);
+        window.testTimeout = null;
     }
 
+    testWarningActive = false;
 
-    testWarningActive =
-        false;
-
-
-    /*
-        Stop speech.
-    */
-
-    if (
-        "speechSynthesis" in window
-    ) {
-
-        speechSynthesis.cancel();
-
-    }
-
-
-    /*
-        Stop audio.
-    */
-
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
     audio.pause();
+    audio.currentTime = 0;
 
-    audio.currentTime =
-        0;
+    alertBox.classList.remove("show", "test");
+    waiting.style.display = "block";
+    currentAlert = null;
 
-
-    /*
-        Remove test screen.
-    */
-
-    alertBox.classList.remove(
-        "show"
-    );
-
-    alertBox.classList.remove(
-        "test"
-    );
-
-
-    waiting.style.display =
-        "block";
-
-
-    currentAlert =
-        null;
-
-
-    /*
-        Return connection indicator
-        to normal state.
-    */
-
-    connectionDot.className =
-        "connection-dot";
-
-
-    connectionText.textContent =
-        "Connecting...";
-
-
-    statusBar.textContent =
-        "Returning to Base44 monitoring";
-
-
-    /*
-        Immediately check Base44.
-    */
+    connectionDot.className = "connection-dot";
+    connectionText.textContent = "Connecting...";
+    statusBar.textContent = "Returning to Base44 monitoring";
 
     checkForAlerts();
-
 }
 
 
@@ -1688,66 +1027,49 @@ function stopTestWarning() {
 ========================================================= */
 
 function stopAlert() {
-
-    /*
-        If a test is running,
-        stop the test.
-    */
-
     if (testWarningActive) {
-
         stopTestWarning();
-
         return;
-
     }
-
-
-    /*
-        Stop audio.
-    */
-
+    
     audio.pause();
+    audio.currentTime = 0;
+    
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+    
+    statusBar.textContent = "Audio stopped locally";
+}
 
-    audio.currentTime =
-        0;
-
-
-    /*
-        Stop speech.
-    */
-
-    if (
-        "speechSynthesis" in window
-    ) {
-
-        speechSynthesis.cancel();
-
+/* =========================================================
+   CLEAR WARNING ENTIRELY
+========================================================= */
+function clearCurrentAlert() {
+    if (testWarningActive) {
+        stopTestWarning();
+        return;
     }
 
-
-    /*
-        Hide display.
-
-        IMPORTANT:
-        This does NOT cancel the Base44 warning.
-
-        The receiver will show it again
-        on the next polling cycle.
-    */
-
-    alertBox.classList.remove(
-        "show"
-    );
-
-    waiting.style.display =
-        "block";
-
-
-    statusBar.textContent =
-        "Alert display stopped locally";
-
-
+    // Stop audio and speech
+    audio.pause();
+    audio.currentTime = 0;
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+    
+    // Add the current alert ID to the cleared list so it doesn't pop back up
+    if (currentAlert && currentAlert.alert_id) {
+        if (!clearedAlertIDs.includes(currentAlert.alert_id)) {
+            clearedAlertIDs.push(currentAlert.alert_id);
+            
+            if (clearedAlertIDs.length > 100) {
+                clearedAlertIDs = clearedAlertIDs.slice(-100);
+            }
+            
+            localStorage.setItem("noahStormClearedAlertIDs", JSON.stringify(clearedAlertIDs));
+        }
+    }
+    
+    // Hide the alert visually
+    hideAlert();
+    statusBar.textContent = "Warning cleared.";
 }
 
 
@@ -1756,40 +1078,14 @@ function stopAlert() {
 ========================================================= */
 
 function formatDate(value) {
+    if (!value) return "--";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
 
-    if (!value) {
-
-        return "--";
-
-    }
-
-
-    const date =
-        new Date(value);
-
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return value;
-
-    }
-
-
-    return date.toLocaleString(
-        "en-CA",
-        {
-            dateStyle:
-                "medium",
-
-            timeStyle:
-                "short"
-        }
-    );
-
+    return date.toLocaleString("en-CA", {
+        dateStyle: "medium",
+        timeStyle: "short"
+    });
 }
 
 
@@ -1798,31 +1094,13 @@ function formatDate(value) {
 ========================================================= */
 
 function toggleFullscreen() {
-
-    if (
-        !document.fullscreenElement
-    ) {
-
-        document.documentElement
-            .requestFullscreen()
-            .catch(
-                error => {
-
-                    console.warn(
-                        error
-                    );
-
-                }
-            );
-
-    }
-
-    else {
-
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(error => {
+            console.warn(error);
+        });
+    } else {
         document.exitFullscreen();
-
     }
-
 }
 
 
@@ -1830,32 +1108,11 @@ function toggleFullscreen() {
    START RECEIVER
 ========================================================= */
 
-console.log(
-    "Noah Storm Scan Receiver starting..."
-);
-
-
-console.log(
-    "Monitoring:",
-    CONFIG.API_URL
-);
-
-
-/*
-    Start checking Base44.
-*/
+console.log("Noah Storm Scan Receiver starting...");
+console.log("Monitoring:", CONFIG.API_URL);
 
 checkForAlerts();
-
-
-/*
-    Continue checking every 5 seconds.
-*/
-
-setInterval(
-    checkForAlerts,
-    CONFIG.CHECK_INTERVAL
-);
+setInterval(checkForAlerts, CONFIG.CHECK_INTERVAL);
 
 </script>
 
