@@ -2,14 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
-<title>Noah Storm Scan Receiver</title>
+<title>Noah Storm Scan — Alert Receiver</title>
 
 <style>
-
 * {
     box-sizing: border-box;
 }
@@ -17,9 +14,10 @@
 html,
 body {
     margin: 0;
+    padding: 0;
     width: 100%;
     height: 100%;
-    font-family: Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     background: #080808;
     color: white;
 }
@@ -28,62 +26,79 @@ body {
     overflow: hidden;
 }
 
-/* HEADER */
+/* =========================================================
+   HEADER
+========================================================= */
 
 .header {
-    height: 70px;
+    height: 72px;
     background: #151515;
+    border-bottom: 2px solid #333;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
 
     padding: 0 25px;
-
-    border-bottom: 2px solid #333;
 }
 
 .logo {
     font-size: 25px;
-    font-weight: bold;
+    font-weight: 900;
+    letter-spacing: .5px;
 }
 
 .connection {
     display: flex;
     align-items: center;
     gap: 10px;
+
+    font-size: 15px;
 }
 
-.dot {
+.connection-dot {
     width: 14px;
     height: 14px;
+
     border-radius: 50%;
+
     background: #777;
 }
 
-.dot.online {
+.connection-dot.online {
     background: #00e676;
     box-shadow: 0 0 12px #00e676;
 }
 
-.dot.offline {
+.connection-dot.offline {
     background: #ff2222;
     box-shadow: 0 0 12px #ff2222;
 }
 
-/* MAIN */
+.connection-dot.testing {
+    background: #ffd000;
+    box-shadow: 0 0 12px #ffd000;
+}
+
+/* =========================================================
+   MAIN
+========================================================= */
 
 .main {
-    height: calc(100vh - 70px);
+    height: calc(100vh - 72px);
+
+    position: relative;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    position: relative;
+    padding: 25px;
 }
 
-/* WAITING */
+/* =========================================================
+   STANDBY
+========================================================= */
 
 .waiting {
     text-align: center;
@@ -99,34 +114,37 @@ body {
     font-size: 20px;
 }
 
-/* ALERT */
+/* =========================================================
+   ALERT BOX
+========================================================= */
 
 .alert {
     display: none;
 
-    width: 90%;
-    max-width: 1200px;
+    width: 92%;
+    max-width: 1250px;
+    max-height: 90vh;
 
     background: #c00000;
 
     border: 8px solid white;
 
-    padding: 45px;
+    padding: 40px;
 
     text-align: center;
 
     box-shadow:
         0 0 30px red,
-        0 0 80px rgba(255,0,0,.7);
+        0 0 80px rgba(255, 0, 0, .75);
 
-    animation: flash 1.2s infinite;
+    animation: alertFlash 1.2s infinite;
 }
 
 .alert.show {
     display: block;
 }
 
-@keyframes flash {
+@keyframes alertFlash {
 
     0% {
         border-color: white;
@@ -134,102 +152,276 @@ body {
 
     50% {
         border-color: #ff0000;
+        box-shadow:
+            0 0 45px red,
+            0 0 100px rgba(255, 0, 0, .9);
     }
 
     100% {
         border-color: white;
     }
-
 }
 
-.alertTitle {
-    font-size: 30px;
-    font-weight: bold;
-    letter-spacing: 5px;
+/* =========================================================
+   TEST MODE
+========================================================= */
+
+.alert.test {
+    background: #9b5200;
+
+    box-shadow:
+        0 0 30px #ffb000,
+        0 0 80px rgba(255, 176, 0, .7);
+
+    animation: testFlash 1.5s infinite;
 }
 
-.warningType {
-    font-size: clamp(40px, 6vw, 80px);
+@keyframes testFlash {
+
+    0% {
+        border-color: white;
+    }
+
+    50% {
+        border-color: #ffd000;
+    }
+
+    100% {
+        border-color: white;
+    }
+}
+
+.test-banner {
+    display: none;
+
+    font-size: 25px;
     font-weight: 900;
 
-    margin: 20px 0;
+    letter-spacing: 4px;
+
+    margin-bottom: 12px;
+}
+
+.alert.test .test-banner {
+    display: block;
+}
+
+/* =========================================================
+   ALERT CONTENT
+========================================================= */
+
+.alert-title {
+    font-size: 30px;
+    font-weight: 900;
+
+    letter-spacing: 5px;
+
+    margin-bottom: 12px;
+}
+
+.warning-type {
+    font-size: clamp(40px, 6vw, 80px);
+
+    font-weight: 900;
+
+    text-transform: uppercase;
+
+    margin: 15px 0 20px;
 }
 
 .location {
-    font-size: clamp(28px, 4vw, 50px);
-    font-weight: bold;
+    font-size: clamp(28px, 4vw, 52px);
 
-    margin-bottom: 25px;
+    font-weight: 900;
+
+    margin-bottom: 22px;
 }
 
 .headline {
-    font-size: 30px;
-    font-weight: bold;
+    font-size: clamp(23px, 3vw, 38px);
+
+    font-weight: 900;
 
     margin-bottom: 20px;
 }
 
 .message {
-    font-size: 23px;
+    font-size: clamp(19px, 2vw, 28px);
+
     line-height: 1.5;
 
-    max-width: 950px;
+    max-width: 1000px;
+
     margin: auto;
+
+    white-space: pre-wrap;
 }
 
-.id {
-    margin-top: 30px;
+.alert-id {
+    margin-top: 25px;
 
     font-family: monospace;
 
     font-size: 18px;
 
-    opacity: .8;
+    opacity: .9;
 }
 
 .times {
     margin-top: 20px;
 
     display: flex;
+
     justify-content: center;
 
     gap: 40px;
 
+    flex-wrap: wrap;
+
     font-size: 17px;
 }
 
-/* CONTROLS */
+/* =========================================================
+   CONTROLS
+========================================================= */
 
 .controls {
     position: absolute;
 
-    bottom: 20px;
-    right: 20px;
+    bottom: 18px;
+    left: 18px;
 
     display: flex;
+
+    flex-wrap: wrap;
+
     gap: 8px;
+
+    z-index: 10;
 }
 
 button {
-    padding: 10px 15px;
+    background: #202020;
 
-    background: #222;
     color: white;
 
     border: 1px solid #555;
-    border-radius: 5px;
+
+    border-radius: 6px;
+
+    padding: 11px 15px;
+
+    font-size: 14px;
 
     cursor: pointer;
 }
 
 button:hover {
-    background: #444;
+    background: #383838;
 }
 
+button.test-button {
+    background: #8a5200;
+
+    border-color: #ffb000;
+
+    font-weight: bold;
+}
+
+button.test-button:hover {
+    background: #a86600;
+}
+
+button.stop-button {
+    background: #7b0000;
+
+    border-color: #ff4444;
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status-bar {
+    position: absolute;
+
+    bottom: 18px;
+    right: 18px;
+
+    color: #888;
+
+    font-size: 13px;
+
+    z-index: 5;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .header {
+        height: 60px;
+
+        padding: 0 12px;
+    }
+
+    .logo {
+        font-size: 18px;
+    }
+
+    .connection {
+        font-size: 11px;
+    }
+
+    .main {
+        height: calc(100vh - 60px);
+
+        padding: 10px;
+    }
+
+    .alert {
+        padding: 25px 15px;
+
+        border-width: 5px;
+
+        max-height: 82vh;
+
+        overflow-y: auto;
+    }
+
+    .alert-title {
+        font-size: 20px;
+    }
+
+    .test-banner {
+        font-size: 18px;
+    }
+
+    .times {
+        flex-direction: column;
+
+        gap: 8px;
+    }
+
+    .controls {
+        left: 10px;
+        bottom: 10px;
+    }
+
+    .status-bar {
+        display: none;
+    }
+}
 </style>
 </head>
 
 <body>
+
+<!-- =======================================================
+     HEADER
+======================================================== -->
 
 <header class="header">
 
@@ -241,7 +433,7 @@ button:hover {
 
         <div
             id="connectionDot"
-            class="dot">
+            class="connection-dot">
         </div>
 
         <span id="connectionText">
@@ -253,7 +445,13 @@ button:hover {
 </header>
 
 
+<!-- =======================================================
+     MAIN
+======================================================== -->
+
 <main class="main">
+
+    <!-- STANDBY SCREEN -->
 
     <div
         id="waiting"
@@ -262,7 +460,7 @@ button:hover {
         <h1>🟢 RECEIVER READY</h1>
 
         <p>
-            Monitoring Noah Storm Scan
+            Monitoring Noah Storm Scan for RED WARNINGS
         </p>
 
         <p id="status">
@@ -272,17 +470,23 @@ button:hover {
     </div>
 
 
+    <!-- ALERT SCREEN -->
+
     <div
         id="alert"
         class="alert">
 
-        <div class="alertTitle">
+        <div class="test-banner">
+            🟡 TEST ALERT — NOT A REAL WARNING
+        </div>
+
+        <div class="alert-title">
             ⚠ RED WARNING ⚠
         </div>
 
         <div
             id="warningType"
-            class="warningType">
+            class="warning-type">
         </div>
 
         <div
@@ -301,19 +505,19 @@ button:hover {
         </div>
 
         <div
-            id="id"
-            class="id">
+            id="alertID"
+            class="alert-id">
         </div>
 
         <div class="times">
 
             <div>
-                ISSUED:
+                <strong>ISSUED:</strong>
                 <span id="issued"></span>
             </div>
 
             <div>
-                EXPIRES:
+                <strong>EXPIRES:</strong>
                 <span id="expires"></span>
             </div>
 
@@ -322,24 +526,70 @@ button:hover {
     </div>
 
 
+    <!-- ===================================================
+         CONTROLS
+    =================================================== -->
+
     <div class="controls">
 
-        <button onclick="testAudio()">
+        <button
+            class="test-button"
+            onclick="runTestWarning()">
+
+            🚨 TEST RED WARNING
+
+        </button>
+
+
+        <button
+            onclick="testAudio()">
+
             🔊 Test Audio
+
         </button>
 
-        <button onclick="enableSpeech()">
+
+        <button
+            onclick="enableSpeech()">
+
             🗣 Enable Speech
+
         </button>
 
-        <button onclick="fullscreen()">
-            ⛶ Fullscreen
+
+        <button
+            class="stop-button"
+            onclick="stopAlert()">
+
+            ✖ Stop Alert
+
         </button>
+
+
+        <button
+            onclick="toggleFullscreen()">
+
+            ⛶ Fullscreen
+
+        </button>
+
+    </div>
+
+
+    <div
+        id="statusBar"
+        class="status-bar">
+
+        Receiver starting...
 
     </div>
 
 </main>
 
+
+<!-- =======================================================
+     AUDIO
+======================================================== -->
 
 <audio
     id="alertAudio"
@@ -350,19 +600,52 @@ button:hover {
 
 <script>
 
-/* =========================================
-   CONFIG
-========================================= */
+/* =========================================================
+   CONFIGURATION
+========================================================= */
 
-const API_URL =
-    "https://noah-storm-scan.base44.app/api/red-alerts";
+const CONFIG = {
 
-const CHECK_INTERVAL = 5000;
+    /*
+        Base44 API.
+
+        Change this if Base44 gives you a different URL.
+    */
+
+    API_URL:
+        "https://noah-storm-scan.base44.app/api/red-alerts",
 
 
-/* =========================================
+    /*
+        If Base44 requires an API key, put it here.
+
+        Leave empty if no key is required.
+    */
+
+    API_KEY:
+        "",
+
+
+    /*
+        Receiver checks Base44 every 5 seconds.
+    */
+
+    CHECK_INTERVAL:
+        5000
+
+};
+
+
+/* =========================================================
    STATE
-========================================= */
+========================================================= */
+
+/*
+    IDs already processed.
+
+    This prevents the same alert from playing
+    over and over again.
+*/
 
 let knownAlertIDs =
     JSON.parse(
@@ -371,42 +654,99 @@ let knownAlertIDs =
         ) || "[]"
     );
 
+
+/*
+    Speech starts disabled because browsers
+    normally require user interaction.
+*/
+
 let speechEnabled = false;
 
 
-/* =========================================
+/*
+    Current alert.
+*/
+
+let currentAlert = null;
+
+
+/*
+    Test warning active?
+*/
+
+let testWarningActive = false;
+
+
+/*
+    Test ID counter.
+*/
+
+let testCounter =
+    Number(
+        localStorage.getItem(
+            "noahStormTestCounter"
+        ) || "0"
+    );
+
+
+/* =========================================================
    ELEMENTS
-========================================= */
+========================================================= */
 
 const waiting =
-    document.getElementById("waiting");
+    document.getElementById(
+        "waiting"
+    );
 
 const alertBox =
-    document.getElementById("alert");
+    document.getElementById(
+        "alert"
+    );
 
 const warningType =
-    document.getElementById("warningType");
+    document.getElementById(
+        "warningType"
+    );
 
 const locationBox =
-    document.getElementById("location");
+    document.getElementById(
+        "location"
+    );
 
 const headline =
-    document.getElementById("headline");
+    document.getElementById(
+        "headline"
+    );
 
 const message =
-    document.getElementById("message");
+    document.getElementById(
+        "message"
+    );
 
-const idBox =
-    document.getElementById("id");
+const alertID =
+    document.getElementById(
+        "alertID"
+    );
 
 const issued =
-    document.getElementById("issued");
+    document.getElementById(
+        "issued"
+    );
 
 const expires =
-    document.getElementById("expires");
+    document.getElementById(
+        "expires"
+    );
 
 const status =
-    document.getElementById("status");
+    document.getElementById(
+        "status"
+    );
+
+const statusBar =
+    document.getElementById(
+        "statusBar"
+    );
 
 const connectionDot =
     document.getElementById(
@@ -424,24 +764,80 @@ const audio =
     );
 
 
-/* =========================================
+/* =========================================================
+   CONNECTION
+========================================================= */
+
+function setConnected() {
+
+    connectionDot.className =
+        "connection-dot online";
+
+    connectionText.textContent =
+        "Connected";
+
+}
+
+
+function setOffline() {
+
+    connectionDot.className =
+        "connection-dot offline";
+
+    connectionText.textContent =
+        "Offline";
+
+}
+
+
+/* =========================================================
    CHECK BASE44
-========================================= */
+========================================================= */
 
 async function checkForAlerts() {
 
+    /*
+        Do not let Base44 overwrite a local
+        test warning while the test is running.
+    */
+
+    if (testWarningActive) {
+
+        return;
+
+    }
+
+
     try {
+
+        const headers = {
+
+            "Accept":
+                "application/json"
+
+        };
+
+
+        /*
+            Add API authentication if configured.
+        */
+
+        if (CONFIG.API_KEY) {
+
+            headers["Authorization"] =
+                "Bearer " +
+                CONFIG.API_KEY;
+
+        }
+
 
         const response =
             await fetch(
-                API_URL,
+                CONFIG.API_URL,
                 {
                     method: "GET",
-                    cache: "no-store",
-                    headers: {
-                        "Accept":
-                            "application/json"
-                    }
+                    headers: headers,
+                    cache: "no-store"
                 }
             );
 
@@ -460,11 +856,7 @@ async function checkForAlerts() {
             await response.json();
 
 
-        connectionDot.className =
-            "dot online";
-
-        connectionText.textContent =
-            "Connected";
+        setConnected();
 
 
         status.textContent =
@@ -473,92 +865,147 @@ async function checkForAlerts() {
                 .toLocaleTimeString();
 
 
+        statusBar.textContent =
+            "Connected to Noah Storm Scan";
+
+
         processAlerts(data);
 
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Receiver error:",
+            error
+        );
 
 
-        connectionDot.className =
-            "dot offline";
-
-        connectionText.textContent =
-            "Offline";
+        setOffline();
 
 
         status.textContent =
             "Unable to connect to Noah Storm Scan";
+
+
+        statusBar.textContent =
+            "Base44 connection unavailable";
 
     }
 
 }
 
 
-/* =========================================
-   PROCESS ALERTS
-========================================= */
+/* =========================================================
+   PROCESS BASE44 ALERTS
+========================================================= */
 
 function processAlerts(data) {
 
-    const alerts =
-        Array.isArray(data)
-            ? data
-            : data.alerts || [];
+    let alerts = [];
 
 
-    const redAlerts =
+    /*
+        Accept:
+
+        {
+            "alerts": []
+        }
+
+        or directly:
+
+        []
+    */
+
+    if (Array.isArray(data)) {
+
+        alerts = data;
+
+    }
+
+    else if (
+        Array.isArray(
+            data.alerts
+        )
+    ) {
+
+        alerts = data.alerts;
+
+    }
+
+
+    /*
+        Only active RED alerts.
+    */
+
+    alerts =
         alerts.filter(
             alert =>
+
                 String(
-                    alert.alert_level
+                    alert.alert_level || ""
                 ).toUpperCase()
                 === "RED"
+
                 &&
-                alert.status === "active"
+
+                String(
+                    alert.status || ""
+                ).toLowerCase()
+                === "active"
+
         );
 
 
-    if (redAlerts.length === 0) {
+    /*
+        No active warnings.
+    */
 
-        hideAlert();
+    if (
+        alerts.length === 0
+    ) {
+
+        if (!testWarningActive) {
+
+            hideAlert();
+
+        }
 
         return;
 
     }
 
 
-    redAlerts.sort(
-        (a,b) =>
+    /*
+        Newest warning first.
+    */
+
+    alerts.sort(
+        (a, b) =>
+
             new Date(
-                b.issued_at
-            ) -
+                b.issued_at || 0
+            )
+
+            -
+
             new Date(
-                a.issued_at
+                a.issued_at || 0
             )
     );
 
 
-    const currentAlert =
-        redAlerts[0];
+    const alert =
+        alerts[0];
 
 
     /*
-        THIS IS THE IMPORTANT PART.
-
-        The ID tag determines whether
-        the alert is new.
+        Every alert MUST have an ID.
     */
 
-    const alertID =
-        currentAlert.alert_id;
-
-
-    if (!alertID) {
+    if (!alert.alert_id) {
 
         console.warn(
-            "Alert has no alert_id."
+            "RED alert has no alert_id."
         );
 
         return;
@@ -566,9 +1013,13 @@ function processAlerts(data) {
     }
 
 
+    /*
+        Has this ID already been processed?
+    */
+
     if (
         !knownAlertIDs.includes(
-            alertID
+            alert.alert_id
         )
     ) {
 
@@ -577,12 +1028,13 @@ function processAlerts(data) {
         */
 
         knownAlertIDs.push(
-            alertID
+            alert.alert_id
         );
 
 
         /*
-            Save IDs locally.
+            Keep only the most recent
+            100 IDs.
         */
 
         if (
@@ -606,15 +1058,16 @@ function processAlerts(data) {
 
 
         showAlert(
-            currentAlert
+            alert,
+            false
         );
 
 
         playAudio();
 
 
-        speak(
-            currentAlert
+        speakAlert(
+            alert
         );
 
     }
@@ -625,11 +1078,12 @@ function processAlerts(data) {
             Existing alert.
 
             Update the display but
-            DO NOT play audio again.
+            DO NOT play the sound again.
         */
 
         showAlert(
-            currentAlert
+            alert,
+            false
         );
 
     }
@@ -637,18 +1091,47 @@ function processAlerts(data) {
 }
 
 
-/* =========================================
-   DISPLAY
-========================================= */
+/* =========================================================
+   SHOW ALERT
+========================================================= */
 
-function showAlert(alert) {
+function showAlert(
+    alert,
+    isTest
+) {
+
+    currentAlert =
+        alert;
+
 
     waiting.style.display =
         "none";
 
+
     alertBox.classList.add(
         "show"
     );
+
+
+    /*
+        Test styling.
+    */
+
+    if (isTest) {
+
+        alertBox.classList.add(
+            "test"
+        );
+
+    }
+
+    else {
+
+        alertBox.classList.remove(
+            "test"
+        );
+
+    }
 
 
     warningType.textContent =
@@ -656,9 +1139,35 @@ function showAlert(alert) {
         "RED WARNING";
 
 
-    locationBox.textContent =
-        alert.location ||
-        "Unknown Location";
+    /*
+        Support either:
+
+        location
+
+        OR
+
+        affected_locations
+    */
+
+    if (
+        Array.isArray(
+            alert.affected_locations
+        )
+    ) {
+
+        locationBox.textContent =
+            alert.affected_locations
+                .join(" • ");
+
+    }
+
+    else {
+
+        locationBox.textContent =
+            alert.location ||
+            "UNKNOWN LOCATION";
+
+    }
 
 
     headline.textContent =
@@ -671,9 +1180,12 @@ function showAlert(alert) {
         "";
 
 
-    idBox.textContent =
+    alertID.textContent =
         "ALERT ID: " +
-        alert.alert_id;
+        (
+            alert.alert_id ||
+            "UNKNOWN"
+        );
 
 
     issued.textContent =
@@ -687,42 +1199,78 @@ function showAlert(alert) {
             alert.expires_at
         );
 
+
+    statusBar.textContent =
+        isTest
+            ? "TEST MODE — NOT A REAL WARNING"
+            : "RED WARNING ACTIVE";
+
 }
 
 
-/* =========================================
-   HIDE
-========================================= */
+/* =========================================================
+   HIDE ALERT
+========================================================= */
 
 function hideAlert() {
+
+    if (testWarningActive) {
+
+        return;
+
+    }
+
 
     alertBox.classList.remove(
         "show"
     );
 
+    alertBox.classList.remove(
+        "test"
+    );
+
+
     waiting.style.display =
         "block";
+
+
+    currentAlert =
+        null;
+
+
+    statusBar.textContent =
+        "Monitoring Noah Storm Scan";
 
 }
 
 
-/* =========================================
+/* =========================================================
    AUDIO
-========================================= */
+========================================================= */
 
 function playAudio() {
 
     audio.currentTime = 0;
 
-    audio.play()
-        .catch(error => {
 
-            console.warn(
-                "Browser blocked autoplay:",
-                error
-            );
+    const promise =
+        audio.play();
 
-        });
+
+    if (promise) {
+
+        promise.catch(
+            error => {
+
+                console.warn(
+                    "Audio autoplay blocked.",
+                    error
+                );
+
+            }
+        );
+
+    }
 
 }
 
@@ -731,11 +1279,13 @@ function testAudio() {
 
     audio.currentTime = 0;
 
+
     audio.play()
         .catch(() => {
 
             alert(
-                "Click the page once, then try Test Audio again."
+                "The browser blocked the audio.\n\n" +
+                "Click the page once and try again."
             );
 
         });
@@ -743,29 +1293,50 @@ function testAudio() {
 }
 
 
-/* =========================================
+/* =========================================================
    SPEECH
-========================================= */
+========================================================= */
 
 function enableSpeech() {
+
+    if (
+        !("speechSynthesis" in window)
+    ) {
+
+        alert(
+            "Speech synthesis is not supported by this browser."
+        );
+
+        return;
+
+    }
+
 
     speechEnabled = true;
 
 
-    const test =
+    const testSpeech =
         new SpeechSynthesisUtterance(
             "Noah Storm Scan speech enabled."
         );
 
 
+    testSpeech.rate =
+        0.9;
+
+
     speechSynthesis.speak(
-        test
+        testSpeech
     );
+
+
+    statusBar.textContent =
+        "Speech enabled";
 
 }
 
 
-function speak(alert) {
+function speakAlert(alert) {
 
     if (!speechEnabled) {
 
@@ -786,21 +1357,42 @@ function speak(alert) {
     speechSynthesis.cancel();
 
 
-    const text =
+    let locations = "";
+
+
+    if (
+        Array.isArray(
+            alert.affected_locations
+        )
+    ) {
+
+        locations =
+            alert.affected_locations
+                .join(", ");
+
+    }
+
+    else {
+
+        locations =
+            alert.location ||
+            "unknown location";
+
+    }
+
+
+    const speechText =
 
         "Red warning. " +
 
         (
             alert.warning_type ||
-            "Warning"
+            "warning"
         ) +
 
-        ". " +
+        ". Affected location: " +
 
-        (
-            alert.location ||
-            "Unknown location"
-        ) +
+        locations +
 
         ". " +
 
@@ -812,12 +1404,15 @@ function speak(alert) {
 
     const speech =
         new SpeechSynthesisUtterance(
-            text
+            speechText
         );
 
 
     speech.rate =
         0.9;
+
+    speech.pitch =
+        1;
 
     speech.volume =
         1;
@@ -830,9 +1425,335 @@ function speak(alert) {
 }
 
 
-/* =========================================
-   DATE
-========================================= */
+/* =========================================================
+   TEST RED WARNING
+========================================================= */
+
+function runTestWarning() {
+
+    /*
+        Stop any previous test.
+    */
+
+    stopTestWarning();
+
+
+    /*
+        Increase test ID.
+    */
+
+    testCounter++;
+
+
+    localStorage.setItem(
+        "noahStormTestCounter",
+        testCounter
+    );
+
+
+    const testID =
+        "NSS-TEST-" +
+        String(
+            testCounter
+        ).padStart(
+            4,
+            "0"
+        );
+
+
+    const now =
+        new Date();
+
+
+    /*
+        Test expires in 10 minutes.
+    */
+
+    const expiry =
+        new Date(
+            now.getTime()
+            +
+            10 * 60 * 1000
+        );
+
+
+    const testAlert = {
+
+        alert_id:
+            testID,
+
+        source_warning_id:
+            "TEST-SOURCE-" +
+            testCounter,
+
+        alert_level:
+            "RED",
+
+        status:
+            "active",
+
+        warning_type:
+            "TORNADO WARNING",
+
+        affected_locations: [
+
+            "Steinbach, Manitoba"
+
+        ],
+
+        location:
+            "Steinbach, Manitoba",
+
+        headline:
+            "TEST RED TORNADO WARNING",
+
+        message:
+            "THIS IS A TEST ALERT FROM NOAH STORM SCAN. " +
+            "THIS IS NOT A REAL WEATHER WARNING.",
+
+        issued_at:
+            now.toISOString(),
+
+        expires_at:
+            expiry.toISOString(),
+
+        source:
+            "Noah Storm Scan TEST",
+
+        test:
+            true
+
+    };
+
+
+    /*
+        Mark test mode.
+    */
+
+    testWarningActive =
+        true;
+
+
+    /*
+        Change connection indicator.
+    */
+
+    connectionDot.className =
+        "connection-dot testing";
+
+    connectionText.textContent =
+        "TEST MODE";
+
+
+    /*
+        Display.
+    */
+
+    showAlert(
+        testAlert,
+        true
+    );
+
+
+    /*
+        Play your uploaded MP3.
+    */
+
+    playAudio();
+
+
+    /*
+        Speak the test alert if enabled.
+    */
+
+    speakAlert(
+        testAlert
+    );
+
+
+    /*
+        Automatically stop the test
+        when its 10-minute test period ends.
+    */
+
+    window.testTimeout =
+        setTimeout(
+            () => {
+
+                stopTestWarning();
+
+            },
+            10 * 60 * 1000
+        );
+
+}
+
+
+/* =========================================================
+   STOP TEST
+========================================================= */
+
+function stopTestWarning() {
+
+    if (
+        window.testTimeout
+    ) {
+
+        clearTimeout(
+            window.testTimeout
+        );
+
+        window.testTimeout =
+            null;
+
+    }
+
+
+    testWarningActive =
+        false;
+
+
+    /*
+        Stop speech.
+    */
+
+    if (
+        "speechSynthesis" in window
+    ) {
+
+        speechSynthesis.cancel();
+
+    }
+
+
+    /*
+        Stop audio.
+    */
+
+    audio.pause();
+
+    audio.currentTime =
+        0;
+
+
+    /*
+        Remove test screen.
+    */
+
+    alertBox.classList.remove(
+        "show"
+    );
+
+    alertBox.classList.remove(
+        "test"
+    );
+
+
+    waiting.style.display =
+        "block";
+
+
+    currentAlert =
+        null;
+
+
+    /*
+        Return connection indicator
+        to normal state.
+    */
+
+    connectionDot.className =
+        "connection-dot";
+
+
+    connectionText.textContent =
+        "Connecting...";
+
+
+    statusBar.textContent =
+        "Returning to Base44 monitoring";
+
+
+    /*
+        Immediately check Base44.
+    */
+
+    checkForAlerts();
+
+}
+
+
+/* =========================================================
+   STOP CURRENT ALERT
+========================================================= */
+
+function stopAlert() {
+
+    /*
+        If a test is running,
+        stop the test.
+    */
+
+    if (testWarningActive) {
+
+        stopTestWarning();
+
+        return;
+
+    }
+
+
+    /*
+        Stop audio.
+    */
+
+    audio.pause();
+
+    audio.currentTime =
+        0;
+
+
+    /*
+        Stop speech.
+    */
+
+    if (
+        "speechSynthesis" in window
+    ) {
+
+        speechSynthesis.cancel();
+
+    }
+
+
+    /*
+        Hide display.
+
+        IMPORTANT:
+        This does NOT cancel the Base44 warning.
+
+        The receiver will show it again
+        on the next polling cycle.
+    */
+
+    alertBox.classList.remove(
+        "show"
+    );
+
+    waiting.style.display =
+        "block";
+
+
+    statusBar.textContent =
+        "Alert display stopped locally";
+
+
+}
+
+
+/* =========================================================
+   DATE FORMAT
+========================================================= */
 
 function formatDate(value) {
 
@@ -861,26 +1782,38 @@ function formatDate(value) {
     return date.toLocaleString(
         "en-CA",
         {
-            dateStyle: "medium",
-            timeStyle: "short"
+            dateStyle:
+                "medium",
+
+            timeStyle:
+                "short"
         }
     );
 
 }
 
 
-/* =========================================
+/* =========================================================
    FULLSCREEN
-========================================= */
+========================================================= */
 
-function fullscreen() {
+function toggleFullscreen() {
 
     if (
         !document.fullscreenElement
     ) {
 
         document.documentElement
-            .requestFullscreen();
+            .requestFullscreen()
+            .catch(
+                error => {
+
+                    console.warn(
+                        error
+                    );
+
+                }
+            );
 
     }
 
@@ -893,16 +1826,35 @@ function fullscreen() {
 }
 
 
-/* =========================================
-   START
-========================================= */
+/* =========================================================
+   START RECEIVER
+========================================================= */
+
+console.log(
+    "Noah Storm Scan Receiver starting..."
+);
+
+
+console.log(
+    "Monitoring:",
+    CONFIG.API_URL
+);
+
+
+/*
+    Start checking Base44.
+*/
 
 checkForAlerts();
 
 
+/*
+    Continue checking every 5 seconds.
+*/
+
 setInterval(
     checkForAlerts,
-    CHECK_INTERVAL
+    CONFIG.CHECK_INTERVAL
 );
 
 </script>
